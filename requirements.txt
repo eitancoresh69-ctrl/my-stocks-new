@@ -1,8 +1,8 @@
-# PINNED VERSIONS - Pre-built wheels only, no source builds
+# FIXED VERSIONS - Compatible with Python 3.11+ and Streamlit
 streamlit==1.28.1
 yfinance==0.2.32
-pandas==2.1.3
-numpy==1.24.3
+pandas==2.2.0
+numpy==1.26.4
 scikit-learn==1.3.2
 requests==2.31.0
 beautifulsoup4==4.12.2

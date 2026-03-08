@@ -1,4 +1,59 @@
-# Add your API keys here (local development only)
-TWELVE_DATA_API_KEY=
-ALPHA_VANTAGE_KEY=
-FINNHUB_API_KEY=
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Project specific
+.cache/
+.logs/
+.data/
+.storage/
+stocks.db
+*.log
+
+# Environment
+.env
+!.env.example
+
+# Streamlit
+.streamlit/
+
+# Cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node (if any)
+node_modules/
+npm-debug.log

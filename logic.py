@@ -1,4 +1,4 @@
-# logic.py - COMPLETE - All 28 columns needed by traders
+# logic.py - FIXED & OPTIMIZED - Core data fetching with 28 columns
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -6,9 +6,17 @@ import yfinance as yf
 import time
 import logging
 from datetime import datetime, timedelta
+from typing import Dict, Optional, List
 
 # Setup logging
 logger = logging.getLogger(__name__)
+
+# Default tickers to analyze
+DEFAULT_TICKERS = [
+    "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA",
+    "META", "NVDA", "JPM", "JNJ", "V",
+    "WMT", "PG", "KO", "MCD", "BA"
+]
 
 try:
     from realtime_data import get_live_price_smart
@@ -16,13 +24,14 @@ try:
 except:
     HAS_REALTIME = False
 
-# Performance optimization: cache single symbol data for 60 seconds
+
 @st.cache_data(ttl=60)
-def _fetch_single_symbol_cached(ticker: str) -> dict | None:
-    """Fetch ALL 28 columns that traders need"""
+def _fetch_single_symbol_cached(ticker: str) -> Optional[Dict]:
+    """Fetch ALL required columns for stock analysis"""
     try:
-        time.sleep(0.05)  # Reduced from 0.2 seconds for faster UI response
+        time.sleep(0.05)
         
+        # Get current price
         if HAS_REALTIME:
             price = get_live_price_smart(ticker)
         else:
@@ -35,6 +44,7 @@ def _fetch_single_symbol_cached(ticker: str) -> dict | None:
         if not price or price <= 0:
             return None
         
+        # Get ticker info and history
         ticker_obj = yf.Ticker(ticker)
         info = ticker_obj.info or {}
         hist = ticker_obj.history(period="1y")
@@ -45,7 +55,7 @@ def _fetch_single_symbol_cached(ticker: str) -> dict | None:
         close = hist["Close"]
         volume = int(hist["Volume"].iloc[-1]) if len(hist) > 0 else 0
         
-        # Technical indicators
+        # ========== TECHNICAL INDICATORS ==========
         rsi = _calc_rsi(close)
         ma50 = float(close.rolling(50).mean().iloc[-1])
         ma200 = float(close.rolling(200).mean().iloc[-1])
@@ -59,13 +69,9 @@ def _fetch_single_symbol_cached(ticker: str) -> dict | None:
         above_ma50 = 1 if close.iloc[-1] > ma50 else 0
         above_ma200 = 1 if close.iloc[-1] > ma200 else 0
         
-        # Bollinger Bands
+        # Bollinger Bands, MACD, Momentum
         bb_width = _calc_bb_width(close)
-        
-        # MACD
         macd = _calc_macd(close)
-        
-        # Momentum
         momentum = _calc_momentum(close)
         
         # Volatility
@@ -74,13 +80,11 @@ def _fetch_single_symbol_cached(ticker: str) -> dict | None:
         # Volume ratio
         vol_ratio = volume / hist["Volume"].mean() if hist["Volume"].mean() > 0 else 0
         
-        # Candle body
+        # Candle patterns
         candle_body = close.iloc[-1] - hist["Open"].iloc[-1] if len(hist) > 0 else 0
-        
-        # Gap
         gap = hist["Open"].iloc[-1] - close.iloc[-2] if len(close) > 1 else 0
         
-        # Financial metrics
+        # ========== FUNDAMENTALS ==========
         currency = "ILS" if str(ticker).endswith(".TA") else "USD"
         price_str = f"{currency}{price:,.2f}"
         
@@ -100,10 +104,10 @@ def _fetch_single_symbol_cached(ticker: str) -> dict | None:
         cash_vs_debt = "OK" if cash > debt else "Risk"
         zero_debt = 1 if debt == 0 else 0
         
-        # Fair Value (intrinsic value estimate)
+        # Fair Value
         eps = info.get("trailingEps", 0) or 0
         pe_ratio = price / eps if eps > 0 else 0
-        fair_value = eps * 20 if eps > 0 else price  # Simple: EPS * 20x
+        fair_value = eps * 20 if eps > 0 else price
         
         # Safety score
         safety = 0
@@ -112,7 +116,7 @@ def _fetch_single_symbol_cached(ticker: str) -> dict | None:
         if div_yield > 2: safety += 1
         if payout < 60: safety += 1
         
-        # DaysToEarnings
+        # Days to earnings
         earnings_date = info.get("earningsDate")
         if earnings_date:
             try:
@@ -124,7 +128,7 @@ def _fetch_single_symbol_cached(ticker: str) -> dict | None:
         else:
             days_to_earnings = 180
         
-        # Score
+        # ========== SCORING & ACTION ==========
         score = 0
         if rev_growth >= 10: score += 1
         if earn_growth >= 10: score += 1
@@ -132,7 +136,6 @@ def _fetch_single_symbol_cached(ticker: str) -> dict | None:
         if roe >= 15: score += 1
         if cash > debt: score += 1
         
-        # Target for long
         target = target_upside if target_upside > 0 else 15
         
         # AI Action Recommendation
@@ -157,9 +160,8 @@ def _fetch_single_symbol_cached(ticker: str) -> dict | None:
             "Currency": currency,
             "Change": round(float(change), 2),
             
-            # Technical
+            # Technical - NO DUPLICATES
             "RSI": round(float(rsi), 1),
-            "rsi": round(float(rsi), 1),  # Duplicate for compatibility
             "MA50": round(float(ma50), 2),
             "MA200": round(float(ma200), 2),
             "above_ma50": above_ma50,
@@ -201,38 +203,63 @@ def _fetch_single_symbol_cached(ticker: str) -> dict | None:
             "AI_Logic": ai_logic,
         }
     except Exception as e:
+        logger.error(f"Error fetching {ticker}: {str(e)}")
         return None
 
+
 def _calc_rsi(prices, period=14):
-    delta = prices.diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
-    rs = gain / loss
-    rsi = 100 - (100 / (1 + rs))
-    return float(rsi.iloc[-1]) if not rsi.iloc[-1] is np.nan else 50.0
+    """Calculate RSI indicator"""
+    try:
+        delta = prices.diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+        return float(rsi.iloc[-1]) if not np.isnan(rsi.iloc[-1]) else 50.0
+    except:
+        return 50.0
+
 
 def _calc_bb_width(prices, period=20):
-    sma = prices.rolling(window=period).mean()
-    std = prices.rolling(window=period).std()
-    upper = sma + (std * 2)
-    lower = sma - (std * 2)
-    width = upper - lower
-    return float(width.iloc[-1]) if len(width) > 0 else 0
+    """Calculate Bollinger Band width"""
+    try:
+        sma = prices.rolling(window=period).mean()
+        std = prices.rolling(window=period).std()
+        upper = sma + (std * 2)
+        lower = sma - (std * 2)
+        width = upper - lower
+        return float(width.iloc[-1]) if len(width) > 0 else 0
+    except:
+        return 0
+
 
 def _calc_macd(prices, fast=12, slow=26):
-    ema_fast = prices.ewm(span=fast).mean()
-    ema_slow = prices.ewm(span=slow).mean()
-    macd = ema_fast - ema_slow
-    return float(macd.iloc[-1]) if len(macd) > 0 else 0
+    """Calculate MACD indicator"""
+    try:
+        ema_fast = prices.ewm(span=fast).mean()
+        ema_slow = prices.ewm(span=slow).mean()
+        macd = ema_fast - ema_slow
+        return float(macd.iloc[-1]) if len(macd) > 0 else 0
+    except:
+        return 0
+
 
 def _calc_momentum(prices, period=10):
-    momentum = prices.iloc[-1] - prices.iloc[-period] if len(prices) > period else 0
-    return float(momentum)
+    """Calculate momentum"""
+    try:
+        momentum = prices.iloc[-1] - prices.iloc[-period] if len(prices) > period else 0
+        return float(momentum)
+    except:
+        return 0
 
-def fetch_master_data(tickers=None, max_workers: int = 3) -> pd.DataFrame:
-    """Fetch master data with ALL 28 columns - with caching for performance"""
-    if not tickers:
-        return pd.DataFrame()
+
+def fetch_master_data(tickers: Optional[List[str]] = None, max_workers: int = 3) -> pd.DataFrame:
+    """
+    Fetch master data with ALL required columns.
+    If no tickers provided, uses DEFAULT_TICKERS.
+    """
+    if tickers is None:
+        tickers = DEFAULT_TICKERS
     
     if isinstance(tickers, str):
         tickers = [tickers]

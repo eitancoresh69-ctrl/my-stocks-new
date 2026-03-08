@@ -1,80 +1,54 @@
-# bull_bear.py — מעבדת שור/דוב דינמית
-import streamlit as st
-import plotly.graph_objects as go
-import yfinance as yf
+# config.py - Configuration management (FIXED)
+import os
+from pathlib import Path
 
+# Environment
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+DEBUG = ENVIRONMENT == "development"
 
-def render_bull_bear(df_all):
-    st.markdown(
-        '<div class="ai-card" style="border-right-color: #9c27b0;">'
-        '<b>⚖️ מעבדת שור/דוב:</b> ה-AI בונה כתב תביעה והגנה דינמי.</div>',
-        unsafe_allow_html=True,
-    )
+# API Keys
+ALPHA_VANTAGE_KEY = os.getenv("ALPHA_VANTAGE_KEY", "")
+NEWSAPI_KEY = os.getenv("NEWSAPI_KEY", "")
+FINNHUB_KEY = os.getenv("FINNHUB_KEY", "")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "")
 
-    # בדיקה אם יש נתונים
-    if df_all is None or df_all.empty or "Symbol" not in df_all.columns:
-        st.warning("⚠️ אין מידע על מניות זמין. אנא בדוק את הסוכנים.")
-        return
+# Paths
+BASE_DIR = Path(__file__).parent
+DATA_DIR = BASE_DIR / ".data"
+CACHE_DIR = BASE_DIR / ".cache"
+LOGS_DIR = BASE_DIR / ".logs"
 
-    try:
-        sel = st.selectbox("בחר מניה:", df_all["Symbol"].unique(), key="bullbear_sym")
-    except:
-        st.warning("⚠️ לא יכול לטעון רשימת מניות.")
-        return
-    
-    filtered = df_all[df_all["Symbol"] == sel]
-    
-    # בדיקה אם המניה נמצאה וש-filtered לא ריק
-    if filtered.empty or len(filtered) == 0:
-        st.error(f"❌ לא נמצאה מניה בשם {sel}")
-        return
-    
-    try:
-        row = filtered.iloc[0]
-    except IndexError:
-        st.error(f"❌ שגיאה בגישה לנתוני המניה {sel}")
-        return
-    st.markdown(f"### 🏢 {sel}")
+# Create directories
+for dir_path in [DATA_DIR, CACHE_DIR, LOGS_DIR]:
+    dir_path.mkdir(exist_ok=True)
 
-    bull_args = f"1. **ציון PDF:** {row['Score']}/6\n"
-    if row["RevGrowth"] > 10:
-        bull_args += f"2. **צמיחה:** הכנסות +{row['RevGrowth']:.1f}%\n"
-    if row["RSI"] < 40:
-        bull_args += f"3. **טכני:** RSI {row['RSI']:.0f} — מכירת יתר, נקודת כניסה.\n"
-    if row["FairValue"] > row["Price"]:
-        bull_args += f"4. **תמחור:** שווי הוגן {row['Currency']}{row['FairValue']:.2f} — בהנחה!\n"
-    if row["CashVsDebt"] == "✅":
-        bull_args += "5. **מאזן:** מזומן עולה על חוב.\n"
+# Stock Configuration
+DEFAULT_TICKERS = [
+    "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA",
+    "META", "NVDA", "JPM", "JNJ", "V",
+    "WMT", "PG", "KO", "MCD", "BA"
+]
 
-    bear_args = "1. **מאקרו:** ריבית גבוהה מאיטה צמיחה.\n"
-    if row["ZeroDebt"] == "❌":
-        bear_args += "2. **חוב:** יש חוב — סיכון בריבית גבוהה.\n"
-    if row["RSI"] > 65:
-        bear_args += f"3. **שיא:** RSI {row['RSI']:.0f} — קניית יתר, סכנת תיקון.\n"
-    if row["FairValue"] > 0 and row["FairValue"] <= row["Price"]:
-        bear_args += f"4. **יקר:** מעל שווי הוגן ({row['Currency']}{row['FairValue']:.2f}).\n"
-    if row["Margin"] < 10:
-        bear_args += f"5. **שולי רווח:** {row['Margin']:.1f}% — מתחת לסטנדרט.\n"
+TASE_TICKERS = [
+    "TASE.TA", "DSCT.TA", "POLI.TA", "LUMI.TA",
+    "TMDX.TA", "ORBI.TA", "TSEM.TA", "ICL.TA"
+]
 
-    col_bull, col_bear = st.columns(2)
-    with col_bull:
-        st.success("**🐂 תזת השור**")
-        st.markdown(bull_args)
-    with col_bear:
-        st.error("**🐻 תזת הדוב**")
-        st.markdown(bear_args)
+# Technical Analysis
+RSI_OVERBOUGHT = 70
+RSI_OVERSOLD = 30
+MA_FAST = 50
+MA_SLOW = 200
 
-    st.markdown("---")
-    yrs = st.slider("טווח שנים:", 1, 10, 5, key="bullbear_yrs")
-    try:
-        hist = yf.Ticker(sel).history(period=f"{yrs}y")
-        fig = go.Figure(go.Scatter(
-            x=hist.index, y=hist["Close"],
-            line=dict(color="#1a73e8", width=2),
-            fill="tozeroy", fillcolor="rgba(26,115,232,0.1)",
-        ))
-        fig.update_layout(title=f"מחיר — {sel}", height=320, template="plotly_white",
-                          margin=dict(l=0, r=0, t=30, b=0))
-        st.plotly_chart(fig)
-    except Exception:
-        st.warning("הגרף לא זמין.")
+# Risk Management
+MAX_POSITION_SIZE = 0.05  # 5% per stock
+STOP_LOSS_PERCENT = 5
+TAKE_PROFIT_PERCENT = 15
+
+# Timeframes
+CACHE_TTL = 300  # 5 minutes
+DATA_FETCH_INTERVAL = 60  # 1 minute
+
+# Trading
+PAPER_TRADING = True  # Use paper trading by default
+PORTFOLIO_VALUE = 100000  # Starting portfolio value

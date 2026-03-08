@@ -1,250 +1,271 @@
-# Investment Hub Elite 2026 🌐
+# Investment Hub Elite 2026 - FIXED & READY
 
-> Advanced AI-Powered Investment Management System with Autonomous Trading Agents
+A comprehensive stock market analysis and portfolio management application with AI-powered agents.
 
-## 📋 WHAT'S NEW IN THIS VERSION (V2.0)
+## 🎯 What's Fixed
 
-✅ **Fixed Critical Bugs**
-- KeyError: 'TargetUpside' - FIXED
-- Missing 'Action' & 'AI_Logic' columns - FIXED
-- No stock buying in scheduler - FIXED
+✅ **Dependency Resolution**: Updated pandas and numpy for Python 3.11+
+✅ **Code Consolidation**: Removed duplicate code across modules
+✅ **Default Data**: Application now works with default tickers (no setup needed)
+✅ **Error Handling**: Proper error handling and fallback mechanisms
+✅ **Module Integration**: All imports properly configured
 
-✅ **New Core Modules (core/)**
-- `logger_system.py` - Centralized logging (replaces 16 bare except:)
-- `storage_manager.py` - Persistent SQLite storage
-- `agent_base.py` - OOP base class with multi-asset support
-- `ml_model_manager.py` - ML model persistence & continuous learning
+## 🚀 Quick Start
 
-✅ **Improvements**
-- All trades saved to SQLite database
-- ML models persist across restarts
-- Agents learn continuously
-- Multi-asset class support (stocks, crypto, commodities, bonds, forex, TASE)
-- Complete test suite
-- Professional logging system
-
-## 🚀 INSTALLATION
+### 1. Installation
 
 ```bash
-# 1. Install dependencies
+# Navigate to project directory
+cd my-stocks-fixed
+
+# Install dependencies
 pip install -r requirements.txt
 
-# 2. Setup environment
+# Or with pip 3
+pip3 install -r requirements.txt
+```
+
+### 2. Configuration
+
+```bash
+# Copy environment template
 cp .env.example .env
-# Edit .env with your API keys
 
-# 3. Run application
+# Edit .env if you have API keys
+# (Optional - app works without them)
+```
+
+### 3. Run Application
+
+```bash
+# Using Streamlit
 streamlit run app.py
+
+# App will open at http://localhost:8501
 ```
 
-## 🧪 TESTING
+## 📊 Features
 
+### Dashboard
+- Real-time stock data (15 major tech stocks)
+- Technical indicators (RSI, MA50, MA200, MACD)
+- Fundamental metrics (P/E, dividend yield, growth)
+- Quality scoring system
+- Buy/Sell recommendations
+
+### AI Agents
+- **Sentiment Analysis**: Market sentiment evaluation
+- **Technical Analysis**: Pattern recognition and signals
+- **Fundamental Analysis**: Company metrics evaluation
+- **Risk Assessment**: Risk scoring and alerts
+- **Portfolio Optimization**: Allocation recommendations
+
+### Portfolio Management
+- Track portfolio holdings
+- Performance metrics
+- Risk analysis
+- Historical data
+
+### Analytics
+- RSI analysis
+- Volatility metrics
+- Price momentum
+- Trend analysis
+
+### Testing & Simulation
+- Deep simulation testing
+- Scenario analysis
+- Market condition testing
+
+## 📁 Project Structure
+
+```
+my-stocks-fixed/
+├── app.py                    # Main Streamlit application
+├── logic.py                  # Core data fetching (28 columns)
+├── scheduler_agents.py       # AI agent scheduling
+├── realtime_data.py         # Real-time data fetching
+├── storage.py               # Data persistence
+├── storage_manager.py       # Storage management
+├── logger_system.py         # Logging system
+├── config.py                # Configuration
+├── requirements.txt         # Python dependencies
+├── .env.example             # Environment template
+└── README.md               # This file
+```
+
+## 🔧 Configuration
+
+Edit `config.py` for:
+- Default tickers
+- RSI thresholds
+- Moving averages
+- Risk management settings
+- Portfolio configuration
+
+## 🌍 Default Market Data
+
+The application includes 15 default US stocks:
+- AAPL, MSFT, GOOGL, AMZN, TSLA
+- META, NVDA, JPM, JNJ, V
+- WMT, PG, KO, MCD, BA
+
+Add more tickers in `config.py`:
+
+```python
+DEFAULT_TICKERS = [
+    "YOUR_TICKER", "ANOTHER_TICKER"
+]
+```
+
+## 📈 Data Columns (28 Total)
+
+### Basic
+- Symbol, Price, Change, Currency
+
+### Technical
+- RSI, MA50, MA200, above_ma50, above_ma200
+- ret_5d, ret_20d, bb_width, macd, momentum
+- volatility, vol_ratio, candle_body, gap
+
+### Fundamentals
+- DivYield, Margin, ROE, EarnGrowth, RevGrowth
+- InsiderHeld, PayoutRatio, CashVsDebt, Safety
+
+### Valuation
+- FairValue, TargetUpside, Score
+
+### AI
+- Action, AI_Logic, DaysToEarnings
+
+## 🔐 API Keys (Optional)
+
+To enable enhanced features, add these to `.env`:
+
+```
+ALPHA_VANTAGE_KEY=your_key
+NEWSAPI_KEY=your_key
+FINNHUB_KEY=your_key
+TELEGRAM_TOKEN=your_token
+```
+
+Leave blank to use basic functionality.
+
+## 🚀 Deployment on Streamlit Cloud
+
+### Step 1: Push to GitHub
 ```bash
-# Run unit tests
-pytest tests/ -v
-
-# Run with coverage
-pytest tests/ --cov=core
+git add .
+git commit -m "Investment Hub Elite 2026"
+git push origin main
 ```
 
-## 📊 CORE MODULES (NEW)
+### Step 2: Deploy
+1. Go to https://share.streamlit.io
+2. Click "New app"
+3. Select your repository
+4. Choose main branch
+5. Set main file to `app.py`
+6. Click Deploy
 
-### logger_system.py
-```python
-from core.logger_system import get_logger, log_error
+### Step 3: Configure Secrets
+In Streamlit Cloud dashboard:
+1. Settings → Secrets
+2. Add your API keys (from `.env`)
+3. Click Save
 
-logger = get_logger()
-logger.info("System started")
+## 🧪 Testing
 
-try:
-    result = fetch_data()
-except Exception as e:
-    log_error("fetch_data", e, context="ticker=AAPL")
-```
-
-### storage_manager.py
-```python
-from core.storage_manager import get_storage_manager
-
-storage = get_storage_manager()
-
-# Save trades
-storage.save_trade("Agent1", {
-    'symbol': 'AAPL',
-    'side': 'BUY',
-    'quantity': 10,
-    'entry_price': 150.25,
-    'exit_price': 165.50,
-    'profit_loss': 1525.00
-})
-
-# Get statistics
-stats = storage.get_agent_stats("Agent1")
-print(f"Win Rate: {stats['win_rate']:.1f}%")
-```
-
-### agent_base.py
-```python
-from core.agent_base import AgentBase, AssetType
-
-class MyAgent(AgentBase):
-    def analyze_market(self, market_data):
-        # Your analysis logic
-        return signal
-    
-# Usage
-agent = MyAgent("MyAgent", initial_capital=100000)
-agent.execute_trade("AAPL", AssetType.STOCK, "BUY", 10, 150.25)
-agent.save_state()
-```
-
-### ml_model_manager.py
-```python
-from core.ml_model_manager import get_model_manager
-
-manager = get_model_manager("MyModel")
-
-# Train
-X, y = prepare_data(market_data)
-metrics = manager.train(X, y)  # Automatically saved!
-
-# Predict
-predictions, probabilities = manager.predict(X_new)
-
-# Continuous learning
-manager.continuous_learning(new_data, new_labels)
-```
-
-## 📁 DIRECTORY STRUCTURE
-
-```
-investment-hub-elite-2026/
-├── core/                          # NEW - Core modules
-│   ├── __init__.py
-│   ├── logger_system.py
-│   ├── storage_manager.py
-│   ├── agent_base.py
-│   └── ml_model_manager.py
-│
-├── tests/                         # NEW - Test suite
-│   ├── __init__.py
-│   └── test_core_modules.py
-│
-├── data/                          # Auto-created on first run
-│   ├── agent_trades/
-│   ├── ml_models/
-│   ├── configs/
-│   └── logs/
-│
-├── app.py                         # Main application
-├── logic.py                       # FIXED - with TargetUpside
-├── scheduler_agents.py            # FIXED - with buying logic
-├── requirements.txt               # UPDATED
-├── .env.example                   # NEW
-├── .gitignore                     # NEW
-└── README.md                      # This file
-```
-
-## 🔄 UPDATED FILES
-
-- ✅ `logic.py` - Fixed TargetUpside + Action + AI_Logic columns
-- ✅ `scheduler_agents.py` - Added stock buying logic
-- ✅ `pro_tools_ai.py` - Added column validation
-- ✅ `alerts_ai.py` - Added defensive handling
-- ✅ `requirements.txt` - Updated dependencies with new tools
-
-## 📊 FEATURES
-
-### Multi-Asset Trading
-```python
-# Stocks
-agent.execute_trade("AAPL", AssetType.STOCK, "BUY", 100, 150)
-
-# Cryptocurrency
-agent.execute_trade("BTC-USD", AssetType.CRYPTO, "BUY", 0.1, 40000)
-
-# Commodities
-agent.execute_trade("GC=F", AssetType.COMMODITY, "BUY", 10, 2050)
-
-# Tel Aviv Stock Exchange
-agent.execute_trade("TEVA.TA", AssetType.TASE, "BUY", 100, 8.50)
-
-# Bonds
-agent.execute_trade("BND", AssetType.BOND, "BUY", 50, 80.25)
-```
-
-### Persistent Storage
-- All trades saved to SQLite (`data/trades.db`)
-- Agent portfolios tracked
-- ML model versions saved
-- Historical analysis available
-
-### ML Continuous Learning
-- Models trained on market data
-- Learn from agent trades
-- Improve predictions over time
-- Feature importance analysis
-
-### Logging System
-- Centralized logging to file + console
-- Different log levels (DEBUG, INFO, WARNING, ERROR)
-- Error tracking with context
-- Check `logs/` directory for application logs
-
-## 🧪 TESTING
-
+Run with:
 ```bash
-# All tests
-pytest tests/
-
-# Specific test
-pytest tests/test_core_modules.py::test_agent_multi_asset -v
-
-# With coverage report
-pytest tests/ --cov=core --cov-report=html
+python -m pytest tests_core_modules.py -v
 ```
 
-## 🔐 SECURITY
+## 📝 Logs
 
-- Environment variables for secrets (use .env)
-- No hardcoded API keys
-- Input validation
-- Error handling prevents silent failures
-- Secure logging (no sensitive data)
+Logs are stored in `.logs/` directory:
+- `agents.log` - Agent actions
+- `trades.log` - Trade history
+- `app.log` - Application logs
 
-## 🚀 DEPLOYMENT
+## ⚙️ Troubleshooting
 
-### Local Development
+### Issue: "No module named 'streamlit'"
 ```bash
-streamlit run app.py
+pip install -r requirements.txt
 ```
 
-### Production
-1. Set up .env with real API keys
-2. Install requirements
-3. Run application
-4. Monitor logs/ directory
+### Issue: "Port 8501 already in use"
+```bash
+streamlit run app.py --server.port 8502
+```
 
-## 📞 SUPPORT
+### Issue: "Dependency resolution failed"
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-- Check logs/ directory for errors
-- Review test cases for usage examples
-- Read docstrings in core modules
-- Run: `pytest tests/ -v`
+### Issue: "Data not loading"
+- Check internet connection
+- Verify tickers in `config.py`
+- Check logs in `.logs/` directory
 
-## 📝 LICENSE
+## 📚 API Documentation
 
-MIT License
+### fetch_master_data()
+```python
+from logic import fetch_master_data
 
-## 🎯 QUICK START
+# Default 15 stocks
+data = fetch_master_data()
 
-1. ✅ `pip install -r requirements.txt`
-2. ✅ `cp .env.example .env` (set your API keys)
-3. ✅ `streamlit run app.py`
-4. ✅ `pytest tests/ -v` (verify everything)
+# Custom tickers
+data = fetch_master_data(["AAPL", "MSFT", "GOOGL"])
+```
+
+### UltraAdvancedScheduler()
+```python
+from scheduler_agents import UltraAdvancedScheduler
+
+scheduler = UltraAdvancedScheduler(market_data)
+scheduler.run_all_agents()
+scheduler.get_status()
+```
+
+## 🤝 Contributing
+
+To improve the application:
+
+1. Test thoroughly
+2. Remove duplicate code
+3. Add documentation
+4. Run all tests
+5. Submit pull request
+
+## 📄 License
+
+MIT License - Feel free to use for personal/commercial use
+
+## 📞 Support
+
+For issues or questions:
+1. Check the troubleshooting section
+2. Review logs in `.logs/`
+3. Check GitHub issues
+
+## 🎉 Features Coming Soon
+
+- Machine learning models
+- Advanced portfolio optimization
+- Real-time alerts
+- Mobile app
+- Historical backtesting
+- Options analysis
+- Crypto integration
 
 ---
 
-**Version:** 2.0.0  
-**Status:** ✅ Production Ready  
-**Last Updated:** 2024
+**Version**: 2.0.0-FIXED
+**Last Updated**: 2026-03-08
+**Status**: ✅ Production Ready
